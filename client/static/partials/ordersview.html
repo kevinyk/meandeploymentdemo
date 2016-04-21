@@ -1,0 +1,26 @@
+  <h1>Add an Order</h1>
+  <form ng-submit = 'addorder()'>
+    Customer: 
+    <select ng-options = 'customer.name as customer.name for customer in customers' ng-model = 'new_order.customer_name'></select>
+    Quantity: <input type = 'number' ng-model = 'new_order.quantity'>
+    Product: 
+    <select ng-options = 'product.name as product.name for product in products' ng-model = 'new_order.product'></select>
+    <input type = 'submit' value = 'Add new order!'>
+  </form>
+  <h3>Current Orders</h3>
+  Filter by name: <input type="text" ng-model="filter_name.customer_name" placeholder="filter">
+  Filter by product: <input type="text" ng-model="filter_name.product" placeholder="filter">
+  <table>
+    <tr>
+      <td>Customer Name</td>
+      <td>Product</td>
+      <td>Quantity</td>
+      <td>Date</td>
+    </tr>
+    <tr ng-repeat = 'order in orders|filter:filter_name' >
+      <td>{{order.customer_name}}</td>
+      <td>{{order.product}}</td>
+      <td>{{order.quantity}}</td>
+      <td>{{order.date}}</td>
+    </tr>
+  </table>

@@ -1,0 +1,181 @@
+<html ng-app="orders_app">
+<head>
+  <style>
+    img{
+      height:200px;
+    }
+    td{
+      border-style:solid;
+    }
+  </style>
+  <title>Orders and Customers</title>
+  <!-- require angular -->
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular.min.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.26/angular-route.js"></script>
+  <script>
+  // PUT ANGULAR CODE HERE
+  // Let's create our angular module
+  var orders_app = angular.module('orders_app', ['ngRoute']);
+  // create the FriendFactory
+  //  use the config method to set up routing:
+  orders_app.config(function ($routeProvider) {
+    $routeProvider
+      .when('/customers',{
+          templateUrl: 'partials/customersview.html',
+          controller: 'CustomersController'
+      })
+      .when('/orders',{
+          templateUrl: 'partials/ordersview.html',
+          controller: 'OrdersController'
+      })
+      .when('/products',{
+          templateUrl: 'partials/productsview.html',
+          controller:'ProductsController'
+      })
+      .otherwise({
+        redirectTo: '/customers'
+      });
+  });
+  orders_app.factory('CustomerFactory', function($http) {
+    var factory = {};
+    var customers = [];
+  //Restful syntax: index = get all that object
+    factory.index = function(callback) {
+      $http.get('/customers').success(function(output){
+        customers = output;
+        callback(customers);
+      })
+    }
+    // note the use of callbacks!
+    // Restful syntax: create = add one to that object
+    factory.create = function(info, callback) {
+      $http.post('/addCustomer', info).success(function(output){
+        customers.push({name: info.name, age: info.age});
+        
+      });
+    };
+    factory.delete = function(info, callback){
+      
+      $http.post('/deleteCustomer', info).success(function(output){
+        customers.splice(customers.indexOf(info),1);
+      })
+    }
+    return factory;
+  });
+  orders_app.factory('OrderFactory', function($http) {
+    var factory = {};
+    var orders = [];
+  //Restful syntax: index = get all that object
+    factory.index = function(callback) {
+      $http.get('/orders').success(function(output){
+        orders = output;
+        callback(orders);
+      })
+    }
+    // note the use of callbacks!
+    // Restful syntax: create = add one to that object
+    factory.create = function(info, callback) {
+      $http.post('/addOrder', info).success(function(output){
+        orders.push({customer_name: info.customer_name, quantity: info.quantity, product:info.product, date:info.date});
+        
+      });
+    }
+    return factory;
+  });
+  orders_app.factory('ProductFactory', function($http) {
+    var factory = {};
+    var products = [];
+  //Restful syntax: index = get all that object
+    factory.index = function(callback) {
+      $http.get('/products').success(function(output){
+        products = output;
+        callback(products);
+      })
+    }
+    // note the use of callbacks!
+    // Restful syntax: create = add one to that object
+    factory.create = function(info, callback) {
+      $http.post('/addProduct', info).success(function(output){
+        products.push({name: info.name, quantity: info.quantity, description:info.description, img_url: info.img_url, date:info.date});
+        
+      });
+    }
+    factory.decrease = function(info, callback){
+      $http.post('/decrementProduct', info);
+    }
+    return factory;
+  });
+
+  // Now let's create a controller with some hardcoded data!
+  orders_app.controller('CustomersController', function($scope, CustomerFactory) {
+    // replace "$scope.friends = FriendFactory.index()" with the following code
+    CustomerFactory.index(function(data) {
+      $scope.customers = data;
+      // anything else that you want to happen after storing friends to $scope
+    });
+    // spend some time understanding the difference and how/why we are using callbacks here.
+    $scope.addcustomer = function() {
+      CustomerFactory.create($scope.new_customer, function(data){
+        $scope.new_customer = {};
+        $scope.customers = CustomerFactory.index();
+      });
+      
+    }
+    $scope.deletecustomer = function(customer){
+      CustomerFactory.delete(customer, function(){
+        $scope.customers = CustomerFactory.index();
+      })
+
+    }
+
+  });
+  orders_app.controller('OrdersController', function($scope, OrderFactory, CustomerFactory, ProductFactory) {
+    // replace "$scope.friends = FriendFactory.index()" with the following code
+    ProductFactory.index(function(data){
+      $scope.products = data;
+    })
+    CustomerFactory.index(function(data){
+      $scope.customers = data;
+    })
+    OrderFactory.index(function(data) {
+      $scope.orders = data;
+      // anything else that you want to happen after storing friends to $scope
+    });
+    // spend some time understanding the difference and how/why we are using callbacks here.
+    $scope.addorder = function() {
+      ProductFactory.decrease($scope.new_order);
+      OrderFactory.create($scope.new_order, function(data){
+        $scope.new_order = {};
+        $scope.orders = OrderFactory.index();
+      });
+      
+    }
+
+  });
+  orders_app.controller('ProductsController', function($scope,ProductFactory){
+    ProductFactory.index(function(data){
+      $scope.products = data;
+    })
+
+    // spend some time understanding the difference and how/why we are using callbacks here.
+    $scope.addproduct = function() {
+      ProductFactory.create($scope.new_product, function(data){
+        $scope.new_product = {};
+        $scope.products = ProductFactory.index();
+      });
+      
+    }
+  })
+  </script>
+</head>
+<!-- everything in the body is going to use the friends controller (this gives us access to the friends controller $scope) -->
+<body>
+  <div ng-app = 'orders_app'>
+        <a href="#/orders">Order List</a> | <a href="#/customers">Customer List</a> | <a href="#/products">Product List</a>
+        <div ng-view="">
+        </div>
+  </div>
+
+
+</body>
+</html>
